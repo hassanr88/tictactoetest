@@ -25,6 +25,7 @@ use crate::ui::image_button::ImageButton;
 use crate::ui::label::Label;
 use crate::ui::messagebox::{MessageBox, MessageBoxResult};
 use crate::ui::text_button::TextButton;
+//use crate::ui::grid::draw_grid;
 use crate::utils::preload_image::TextureManager;
 use macroquad::prelude::*;
 use miniquad::date;
@@ -117,6 +118,19 @@ fn checkwinner(btn: &Vec<ImageButton>) -> i32 {
     0
 }
 
+fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_player: &mut Label, tm: &TextureManager) {
+    for i in 0..btn.len() {
+                btn[i].set_preload(
+                        tm.get_preload("assets/white.png").unwrap(),
+                        tm.get_preload("assets/white.png").unwrap(),
+                    );
+                btn[i].enabled = true;
+                lbl_player.set_text("Player: X");
+                *player = true;
+                *check = true;
+            }
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let tm = TextureManager::new();
@@ -196,7 +210,7 @@ async fn main() {
         ),
     ];
 
-    let mut human_bot = MessageBox::custom("Bot or Player 2?", "Select Human or Bot", vec!["Huaman", "Bot"], Some(0));
+    let mut human_bot = MessageBox::custom("Bot or Player ?", "Select Human or Bot", vec!["Huaman", "Bot"], Some(0));
     let mut ai_diff = MessageBox::custom(
         "Choose Difficulty",
         "Select game difficulty:",
@@ -205,6 +219,8 @@ async fn main() {
     );
     let mut btn_reset = TextButton::new(250.0, 700.0, 150.0, 50.0, "Reset", GRAY, RED, 30);
     let mut btn_exit = TextButton::new(650.0, 700.0, 150.0, 50.0, "Exit", GRAY, RED, 30);
+    let mut btn_modeswitch = TextButton::new(50.0, 600.0, 150.0, 50.0, "Change Mode", GRAY, PURPLE, 30);
+    let mut btn_settings = TextButton::new(50.0, 700.0, 150.0, 50.0, "Settings", GRAY, PURPLE, 30);
     let mut player = true;
     let mut lbl_score = Label::new("Score: X: 0 O: 0 Tie: 0", 380.0, 650.0, 30);
     let mut lbl_player = Label::new("Player: X", 464.0, 750.0, 30);
@@ -215,7 +231,6 @@ async fn main() {
     let mut check = true;
     let mut onstart = true;
     let mut bot = false;
-    let mut choosing_difficulty = false;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
@@ -231,8 +246,8 @@ async fn main() {
                     }
                     MessageBoxResult::ButtonPressed(1) => {
                         bot = true;
-                        ai_diff.show();
-                        choosing_difficulty = true;
+                        ai_diff_int = 0;
+                        onstart = false;
                     }
                     #[allow(unused)]
                     MessageBoxResult::ButtonPressed(_) => {
@@ -242,37 +257,13 @@ async fn main() {
                     MessageBoxResult::Closed => {}
                 }
             }
-            if choosing_difficulty {
-                ai_diff.show();
-                if let Some(result) = ai_diff.draw() {
-                    // Only runs when a button was clicked or dialog was closed
-                    match result {
-                        MessageBoxResult::ButtonPressed(0) => {
-                            ai_diff_int = 0;
-                            choosing_difficulty = false;
-                            onstart = false;
-                        }
-                        MessageBoxResult::ButtonPressed(1) => {
-                            ai_diff_int = 1;
-                            choosing_difficulty = false;
-                            onstart = false;
-                        }
-                        MessageBoxResult::ButtonPressed(2) => {
-                            ai_diff_int = 2;
-                            choosing_difficulty = false;
-                            onstart = false;
-                        }
-                        #[allow(unused)]
-                        MessageBoxResult::ButtonPressed(_) => {
-                            // IMPORTANT: This catch-all pattern is required by the Rust compiler
-                            // even for simple confirm dialogs to ensure all possible values are covered
-                        }
-                        MessageBoxResult::Closed => {}
-                    }
-                }
-            }
         }
-
+        if bot == false {
+            btn_settings.enabled = false;
+        }
+        else {
+            btn_settings.enabled = true;
+        }
         lbl_score.set_text(&format!("Score X: {} O: {} Tie: {}", xscore, oscore, ties));
 
         for i in 0..btn.len() {
@@ -308,6 +299,31 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     }
                 }
+                else {
+                    if player == true {
+                        btn[i].set_preload(tm.get_preload("assets/x.png").unwrap(), tm.get_preload("assets/x.png").unwrap());
+                        lbl_player.set_text("Player: O");
+                        btn[i].enabled = false;
+                        player = false;
+                    } else {
+                        btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
+                        lbl_player.set_text("Player: X");
+                        btn[i].enabled = false;
+                        player = true;
+                    }
+                    if checkwinner(&btn) == 1 {
+                            xscore += 1;
+                            check = false;
+                        } else if checkwinner(&btn) == 2 {
+                                oscore += 1;
+                                check = false;
+                        }
+                        if check == false {
+                            for i in 0..btn.len() {
+                                btn[i].enabled = false;
+                            }
+                        }
+                }
                 if check == true
                     && btn[0].get_filename() != "assets/white.png"
                     && btn[1].get_filename() != "assets/white.png"
@@ -325,17 +341,67 @@ async fn main() {
             }
         }
         if btn_reset.click() {
-            for i in 0..btn.len() {
-                btn[i].set_image("assets/white.png", "assets/white.png").await;
-                btn[i].enabled = true;
-                lbl_player.set_text("Player: X");
-                player = true;
-                check = true;
+            reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+        }
+        if btn_modeswitch.click() {
+            human_bot.show();
+            if let Some(result) = human_bot.draw() {
+                // Only runs when a button was clicked or dialog was closed
+                match result {
+                    MessageBoxResult::ButtonPressed(0) => {
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        bot = false;
+                    }
+                    MessageBoxResult::ButtonPressed(1) => {
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        bot = true;
+                        ai_diff_int = 0;
+                    }
+                    #[allow(unused)]
+                    MessageBoxResult::ButtonPressed(_) => {
+                        // IMPORTANT: This catch-all pattern is required by the Rust compiler
+                        // even for simple confirm dialogs to ensure all possible values are covered
+                    }
+                    MessageBoxResult::Closed => {
+
+                    }
+                }
+            }
+        }
+        if btn_settings.click() {
+            ai_diff.show();
+            if let Some(result) = ai_diff.draw() {
+                // Only runs when a button was clicked or dialog was closed
+                match result {
+                    MessageBoxResult::ButtonPressed(0) => {
+                        bot = true;
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                    }
+                    MessageBoxResult::ButtonPressed(1) => {
+                        bot = true;
+                        ai_diff_int = 1;
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                    }
+                    MessageBoxResult::ButtonPressed(2) => {
+                        bot = true;
+                        ai_diff_int = 2;
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                    }
+                    #[allow(unused)]
+                    MessageBoxResult::ButtonPressed(_) => {
+                        // IMPORTANT: This catch-all pattern is required by the Rust compiler
+                        // even for simple confirm dialogs to ensure all possible values are covered
+                    }
+                    MessageBoxResult::Closed => {
+
+                    }
+                }
             }
         }
         if btn_exit.click() {
             break;
         }
+        //draw_grid(50.0, BROWN);
         human_bot.draw();
         ai_diff.draw();
         lbl_score.draw();
