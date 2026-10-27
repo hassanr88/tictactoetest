@@ -44,7 +44,7 @@ fn window_conf() -> Conf {
     }
 }
 
-fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
+fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_Count: i32) {
     rand::srand(date::now() as u64);
     if ai_diff == 0 {
         for i in 0..9 {
@@ -69,7 +69,36 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
             }
         }
     } else if ai_diff == 1 {
+        for i in 0..9 {
+            if m_Count == 1 {
+                let mut random_int = rand::gen_range(0, 9);
+                while vector[random_int].get_filename() != "assets/white.png" {
+                random_int = rand::gen_range(0, 9);
+                if vector[random_int].get_filename() == "assets/white.png" {
+                if player == true {
+                    vector[random_int].set_preload(
+                        texturem.get_preload("assets/o.png").unwrap(),
+                        texturem.get_preload("assets/o.png").unwrap(),
+                    );
+                } else {
+                    vector[random_int].set_preload(
+                        texturem.get_preload("assets/x.png").unwrap(),
+                        texturem.get_preload("assets/x.png").unwrap(),
+                    );
+                }
+                vector[random_int].enabled = false;
+                break;
+            }
+            }
+            }
+            if m_Count == 2 {
+                if vector[i].get_filename() == "assets/x.png" {
+                    println!("{}", i); 
+                }
+            }
+        }
     } else {
+
     }
 }
 
@@ -115,10 +144,22 @@ fn checkwinner(btn: &Vec<ImageButton>) -> i32 {
             }
         }
     }
+    if btn[0].get_filename() != "assets/white.png" && 
+    btn[1].get_filename() != "assets/white.png" &&
+    btn[2].get_filename() != "assets/white.png" &&
+    btn[3].get_filename() != "assets/white.png" &&
+    btn[4].get_filename() != "assets/white.png" &&
+    btn[5].get_filename() != "assets/white.png" &&
+    btn[6].get_filename() != "assets/white.png" &&
+    btn[7].get_filename() != "assets/white.png" &&
+    btn[8].get_filename() != "assets/white.png"
+    {
+        return 3;
+    }
     0
 }
 
-fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_player: &mut Label, tm: &TextureManager) {
+fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_player: &mut Label, tm: &TextureManager, m_Count: &mut i32) {
     for i in 0..btn.len() {
                 btn[i].set_preload(
                         tm.get_preload("assets/white.png").unwrap(),
@@ -128,6 +169,7 @@ fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_pl
                 lbl_player.set_text("Player: X");
                 *player = true;
                 *check = true;
+                *m_Count = 0;
             }
 }
 
@@ -219,7 +261,7 @@ async fn main() {
     );
     let mut btn_reset = TextButton::new(250.0, 700.0, 150.0, 50.0, "Reset", GRAY, RED, 30);
     let mut btn_exit = TextButton::new(650.0, 700.0, 150.0, 50.0, "Exit", GRAY, RED, 30);
-    let mut btn_modeswitch = TextButton::new(50.0, 600.0, 150.0, 50.0, "Change Mode", GRAY, PURPLE, 30);
+    let btn_modeswitch = TextButton::new(50.0, 600.0, 150.0, 50.0, "Change Mode", GRAY, PURPLE, 30);
     let mut btn_settings = TextButton::new(50.0, 700.0, 150.0, 50.0, "Settings", GRAY, PURPLE, 30);
     let mut player = true;
     let mut lbl_score = Label::new("Score: X: 0 O: 0 Tie: 0", 380.0, 650.0, 30);
@@ -231,6 +273,9 @@ async fn main() {
     let mut check = true;
     let mut onstart = true;
     let mut bot = false;
+    let mut show_dialog_settings = false;
+    let mut show_dialog_humanbot = false;
+    let mut m_Count = 0;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
@@ -273,11 +318,15 @@ async fn main() {
                         btn[i].set_preload(tm.get_preload("assets/x.png").unwrap(), tm.get_preload("assets/x.png").unwrap());
                         lbl_player.set_text("Player: O");
                         btn[i].enabled = false;
-                        if checkwinner(&btn) == 1 {
+                        if checkwinner(&btn) == 3 {
+                            ties +=1;
+                            check = false;
+                        }
+                        else if checkwinner(&btn) == 1 {
                             xscore += 1;
                             check = false;
                         } else if checkwinner(&btn) == 0 {
-                            ai_move(ai_diff_int, &mut btn, true, &tm);
+                            ai_move(ai_diff_int, &mut btn, true, &tm, m_Count);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
@@ -295,7 +344,7 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     } else {
                         btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
-                        ai_move(ai_diff_int, &mut btn, false, &tm);
+                        ai_move(ai_diff_int, &mut btn, false, &tm, m_Count);
                         lbl_player.set_text("Player: X");
                     }
                 }
@@ -341,19 +390,23 @@ async fn main() {
             }
         }
         if btn_reset.click() {
-            reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+            reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
         }
         if btn_modeswitch.click() {
+            show_dialog_humanbot = true;
             human_bot.show();
+            
+            }
+        if show_dialog_humanbot == true {
             if let Some(result) = human_bot.draw() {
                 // Only runs when a button was clicked or dialog was closed
                 match result {
                     MessageBoxResult::ButtonPressed(0) => {
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
                         bot = false;
                     }
                     MessageBoxResult::ButtonPressed(1) => {
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
                         bot = true;
                         ai_diff_int = 0;
                     }
@@ -369,23 +422,29 @@ async fn main() {
             }
         }
         if btn_settings.click() {
+            show_dialog_settings = true;
             ai_diff.show();
+            
+        }
+        if show_dialog_settings == true {
             if let Some(result) = ai_diff.draw() {
                 // Only runs when a button was clicked or dialog was closed
                 match result {
                     MessageBoxResult::ButtonPressed(0) => {
+                        ai_diff_int = 0;
                         bot = true;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
                     }
                     MessageBoxResult::ButtonPressed(1) => {
                         bot = true;
                         ai_diff_int = 1;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+                        m_Count = 1;
                     }
                     MessageBoxResult::ButtonPressed(2) => {
                         bot = true;
                         ai_diff_int = 2;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
                     }
                     #[allow(unused)]
                     MessageBoxResult::ButtonPressed(_) => {
