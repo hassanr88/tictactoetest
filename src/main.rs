@@ -89,11 +89,12 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
                 vector[random_int].enabled = false;
             }
             }
-        for i in 0..9 {
+
             if m_Count == 2 {
-                
+                for i in 0..9 {
+                }
             }
-        }
+        
     } else {
 
     }
