@@ -69,12 +69,12 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
             }
         }
     } else if ai_diff == 1 {
-        for i in 0..9 {
-            if m_Count == 1 {
+        if m_Count == 1 {
                 let mut random_int = rand::gen_range(0, 9);
-                while vector[random_int].get_filename() != "assets/white.png" {
+            while vector[random_int].get_filename() != "assets/white.png" {
                 random_int = rand::gen_range(0, 9);
-                if vector[random_int].get_filename() == "assets/white.png" {
+            }
+            if vector[random_int].get_filename() == "assets/white.png" {
                 if player == true {
                     vector[random_int].set_preload(
                         texturem.get_preload("assets/o.png").unwrap(),
@@ -87,14 +87,11 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
                     );
                 }
                 vector[random_int].enabled = false;
-                break;
             }
             }
-            }
+        for i in 0..9 {
             if m_Count == 2 {
-                if vector[i].get_filename() == "assets/x.png" {
-                    println!("{}", i); 
-                }
+                
             }
         }
     } else {
@@ -315,6 +312,7 @@ async fn main() {
             if btn[i].click() {
                 if bot == true {
                     if player == true {
+                        m_Count += 1;
                         btn[i].set_preload(tm.get_preload("assets/x.png").unwrap(), tm.get_preload("assets/x.png").unwrap());
                         lbl_player.set_text("Player: O");
                         btn[i].enabled = false;
@@ -439,7 +437,7 @@ async fn main() {
                         bot = true;
                         ai_diff_int = 1;
                         reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
-                        m_Count = 1;
+                        m_Count = 0;
                     }
                     MessageBoxResult::ButtonPressed(2) => {
                         bot = true;
