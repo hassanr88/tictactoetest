@@ -27,6 +27,7 @@ use crate::ui::messagebox::{MessageBox, MessageBoxResult};
 use crate::ui::text_button::TextButton;
 //use crate::ui::grid::draw_grid;
 use crate::utils::preload_image::TextureManager;
+use macroquad::input::KeyCode::U;
 use macroquad::prelude::*;
 use miniquad::date;
 
@@ -44,7 +45,7 @@ fn window_conf() -> Conf {
     }
 }
 
-fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_Count: i32) {
+fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_Count: i32, xpos1: &mut usize, xpos2: &mut usize) {
     rand::srand(date::now() as u64);
     if ai_diff == 0 {
         for i in 0..9 {
@@ -70,6 +71,13 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
         }
     } else if ai_diff == 1 {
         if m_Count == 1 {
+            for i in 0..9 {
+                if vector[i].get_filename() == "assets/x.png" {
+                    *xpos1 = i;
+                    break;
+                }
+            }
+            
                 let mut random_int = rand::gen_range(0, 9);
             while vector[random_int].get_filename() != "assets/white.png" {
                 random_int = rand::gen_range(0, 9);
@@ -92,6 +100,21 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
 
             if m_Count == 2 {
                 for i in 0..9 {
+                    if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
+                        *xpos2 = i;
+                        break;
+                    }
+                }
+                    let row1: [i32; 3] = [0, 1, 2];
+                    let row2: [i32; 3] = [3, 4, 5];
+                    let row3: [i32; 3] = [6, 7, 8];
+                    let col1: [i32; 3] = [0, 3, 6];
+                    let col2: [i32; 3] = [1, 4, 7];
+                    let col3: [i32; 3] = [2, 5, 8];
+                    let dia1: [i32; 3] = [0, 4, 8];
+                    let dia2: [i32; 3] = [2, 4, 6];
+                if (row1.contains(xpos1) && row1.contains(xpos2)) {
+
                 }
             }
         
@@ -274,6 +297,8 @@ async fn main() {
     let mut show_dialog_settings = false;
     let mut show_dialog_humanbot = false;
     let mut m_Count = 0;
+    let mut xpos1= &mut 42;
+    let mut xpos2= &mut 42;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
@@ -325,7 +350,7 @@ async fn main() {
                             xscore += 1;
                             check = false;
                         } else if checkwinner(&btn) == 0 {
-                            ai_move(ai_diff_int, &mut btn, true, &tm, m_Count);
+                            ai_move(ai_diff_int, &mut btn, true, &tm, m_Count, xpos1, xpos2);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
@@ -343,7 +368,7 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     } else {
                         btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
-                        ai_move(ai_diff_int, &mut btn, false, &tm, m_Count);
+                        ai_move(ai_diff_int, &mut btn, false, &tm, m_Count, xpos1, xpos2);
                         lbl_player.set_text("Player: X");
                     }
                 }
