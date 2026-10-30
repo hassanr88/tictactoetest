@@ -45,10 +45,31 @@ fn window_conf() -> Conf {
     }
 }
 
-fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_Count: i32, xpos1: &mut usize, xpos2: &mut usize) {
+fn findwin(xpos1: &mut usize, xpos2: &mut usize, vector: &mut Vec<ImageButton>, texturem: &TextureManager, ary1: usize, ary2: usize, ary3: usize) {
+    if (*xpos1 == ary1 && *xpos2 == ary2) || (*xpos1 == ary2 && *xpos2 == ary1) {
+                    vector[ary3].set_preload(
+                        texturem.get_preload("assets/o.png").unwrap(),
+                        texturem.get_preload("assets/o.png").unwrap(),
+                    );
+                    vector[ary3].enabled = false;
+                } else if (*xpos1 == ary1 && *xpos2 == ary3) || (*xpos1 == ary3 && *xpos2 == ary1) {
+                    vector[ary2].set_preload(
+                        texturem.get_preload("assets/o.png").unwrap(),
+                        texturem.get_preload("assets/o.png").unwrap(),
+                    );
+                    vector[ary2].enabled = false;
+                } else {
+                    vector[ary1].set_preload(
+                        texturem.get_preload("assets/o.png").unwrap(),
+                        texturem.get_preload("assets/o.png").unwrap(),
+                    );
+                    vector[ary1].enabled = false;
+                }
+}
+
+fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
     rand::srand(date::now() as u64);
-    if ai_diff == 0 {
-        for i in 0..9 {
+    for i in 0..9 {
             let mut random_int = rand::gen_range(0, 9);
             while vector[random_int].get_filename() != "assets/white.png" {
                 random_int = rand::gen_range(0, 9);
@@ -69,57 +90,62 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
                 break;
             }
         }
+}
+
+fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_count: i32, xpos1: &mut usize, xpos2: &mut usize) {
+    if ai_diff == 0 {
+        randommove(vector, player, texturem);
     } else if ai_diff == 1 {
-        if m_Count == 1 {
+        if m_count == 1 {
             for i in 0..9 {
                 if vector[i].get_filename() == "assets/x.png" {
                     *xpos1 = i;
                     break;
                 }
             }
+
+            randommove(vector, player, texturem);
+        }
+
+        else if m_count == 2 {
+            for i in 0..9 {
+                if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
+                    *xpos2 = i;
+                    break;
+                }
+            }
+            let row1: [usize; 3] = [0, 1, 2];
+            let row2: [usize; 3] = [3, 4, 5];
+            let row3: [usize; 3] = [6, 7, 8];
+            let col1: [usize; 3] = [0, 3, 6];
+            let col2: [usize; 3] = [1, 4, 7];
+            let col3: [usize; 3] = [2, 5, 8];
+            let dia1: [usize; 3] = [0, 4, 8];
+            let dia2: [usize; 3] = [2, 4, 6];
+            if row1.contains(xpos1) && row1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2);
+            } else if row2.contains(xpos1) && row2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5);
+            } else if row3.contains(xpos1) && row3.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8);
+            } else if col1.contains(xpos1) && col1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6);
+            } else if col2.contains(xpos1) && col2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7);
+            } else if col3.contains(xpos1) && col3.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8);
+            } else if dia1.contains(xpos1) && dia1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8);
+            } else if dia2.contains(xpos1) && dia2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6);
+            } else {
+                randommove(vector, player, texturem);
+            }
+        }
+        else if m_count == 3 {
             
-                let mut random_int = rand::gen_range(0, 9);
-            while vector[random_int].get_filename() != "assets/white.png" {
-                random_int = rand::gen_range(0, 9);
-            }
-            if vector[random_int].get_filename() == "assets/white.png" {
-                if player == true {
-                    vector[random_int].set_preload(
-                        texturem.get_preload("assets/o.png").unwrap(),
-                        texturem.get_preload("assets/o.png").unwrap(),
-                    );
-                } else {
-                    vector[random_int].set_preload(
-                        texturem.get_preload("assets/x.png").unwrap(),
-                        texturem.get_preload("assets/x.png").unwrap(),
-                    );
-                }
-                vector[random_int].enabled = false;
-            }
-            }
-
-            if m_Count == 2 {
-                for i in 0..9 {
-                    if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
-                        *xpos2 = i;
-                        break;
-                    }
-                }
-                    let row1: [i32; 3] = [0, 1, 2];
-                    let row2: [i32; 3] = [3, 4, 5];
-                    let row3: [i32; 3] = [6, 7, 8];
-                    let col1: [i32; 3] = [0, 3, 6];
-                    let col2: [i32; 3] = [1, 4, 7];
-                    let col3: [i32; 3] = [2, 5, 8];
-                    let dia1: [i32; 3] = [0, 4, 8];
-                    let dia2: [i32; 3] = [2, 4, 6];
-                if (row1.contains(xpos1) && row1.contains(xpos2)) {
-
-                }
-            }
-        
+        }
     } else {
-
     }
 }
 
@@ -165,33 +191,30 @@ fn checkwinner(btn: &Vec<ImageButton>) -> i32 {
             }
         }
     }
-    if btn[0].get_filename() != "assets/white.png" && 
-    btn[1].get_filename() != "assets/white.png" &&
-    btn[2].get_filename() != "assets/white.png" &&
-    btn[3].get_filename() != "assets/white.png" &&
-    btn[4].get_filename() != "assets/white.png" &&
-    btn[5].get_filename() != "assets/white.png" &&
-    btn[6].get_filename() != "assets/white.png" &&
-    btn[7].get_filename() != "assets/white.png" &&
-    btn[8].get_filename() != "assets/white.png"
+    if btn[0].get_filename() != "assets/white.png"
+        && btn[1].get_filename() != "assets/white.png"
+        && btn[2].get_filename() != "assets/white.png"
+        && btn[3].get_filename() != "assets/white.png"
+        && btn[4].get_filename() != "assets/white.png"
+        && btn[5].get_filename() != "assets/white.png"
+        && btn[6].get_filename() != "assets/white.png"
+        && btn[7].get_filename() != "assets/white.png"
+        && btn[8].get_filename() != "assets/white.png"
     {
         return 3;
     }
     0
 }
 
-fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_player: &mut Label, tm: &TextureManager, m_Count: &mut i32) {
+fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_player: &mut Label, tm: &TextureManager, m_count: &mut i32) {
     for i in 0..btn.len() {
-                btn[i].set_preload(
-                        tm.get_preload("assets/white.png").unwrap(),
-                        tm.get_preload("assets/white.png").unwrap(),
-                    );
-                btn[i].enabled = true;
-                lbl_player.set_text("Player: X");
-                *player = true;
-                *check = true;
-                *m_Count = 0;
-            }
+        btn[i].set_preload(tm.get_preload("assets/white.png").unwrap(), tm.get_preload("assets/white.png").unwrap());
+        btn[i].enabled = true;
+        lbl_player.set_text("Player: X");
+        *player = true;
+        *check = true;
+        *m_count = 0;
+    }
 }
 
 #[macroquad::main(window_conf)]
@@ -296,9 +319,9 @@ async fn main() {
     let mut bot = false;
     let mut show_dialog_settings = false;
     let mut show_dialog_humanbot = false;
-    let mut m_Count = 0;
-    let mut xpos1= &mut 42;
-    let mut xpos2= &mut 42;
+    let mut m_count = 0;
+    let xpos1 = &mut 42;
+    let xpos2 = &mut 42;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
@@ -328,8 +351,7 @@ async fn main() {
         }
         if bot == false {
             btn_settings.enabled = false;
-        }
-        else {
+        } else {
             btn_settings.enabled = true;
         }
         lbl_score.set_text(&format!("Score X: {} O: {} Tie: {}", xscore, oscore, ties));
@@ -338,19 +360,18 @@ async fn main() {
             if btn[i].click() {
                 if bot == true {
                     if player == true {
-                        m_Count += 1;
+                        m_count += 1;
                         btn[i].set_preload(tm.get_preload("assets/x.png").unwrap(), tm.get_preload("assets/x.png").unwrap());
                         lbl_player.set_text("Player: O");
                         btn[i].enabled = false;
                         if checkwinner(&btn) == 3 {
-                            ties +=1;
+                            ties += 1;
                             check = false;
-                        }
-                        else if checkwinner(&btn) == 1 {
+                        } else if checkwinner(&btn) == 1 {
                             xscore += 1;
                             check = false;
                         } else if checkwinner(&btn) == 0 {
-                            ai_move(ai_diff_int, &mut btn, true, &tm, m_Count, xpos1, xpos2);
+                            ai_move(ai_diff_int, &mut btn, true, &tm, m_count, xpos1, xpos2);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
@@ -368,11 +389,10 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     } else {
                         btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
-                        ai_move(ai_diff_int, &mut btn, false, &tm, m_Count, xpos1, xpos2);
+                        ai_move(ai_diff_int, &mut btn, false, &tm, m_count, xpos1, xpos2);
                         lbl_player.set_text("Player: X");
                     }
-                }
-                else {
+                } else {
                     if player == true {
                         btn[i].set_preload(tm.get_preload("assets/x.png").unwrap(), tm.get_preload("assets/x.png").unwrap());
                         lbl_player.set_text("Player: O");
@@ -385,17 +405,17 @@ async fn main() {
                         player = true;
                     }
                     if checkwinner(&btn) == 1 {
-                            xscore += 1;
-                            check = false;
-                        } else if checkwinner(&btn) == 2 {
-                                oscore += 1;
-                                check = false;
+                        xscore += 1;
+                        check = false;
+                    } else if checkwinner(&btn) == 2 {
+                        oscore += 1;
+                        check = false;
+                    }
+                    if check == false {
+                        for i in 0..btn.len() {
+                            btn[i].enabled = false;
                         }
-                        if check == false {
-                            for i in 0..btn.len() {
-                                btn[i].enabled = false;
-                            }
-                        }
+                    }
                 }
                 if check == true
                     && btn[0].get_filename() != "assets/white.png"
@@ -414,23 +434,22 @@ async fn main() {
             }
         }
         if btn_reset.click() {
-            reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+            reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
         }
         if btn_modeswitch.click() {
             show_dialog_humanbot = true;
             human_bot.show();
-            
-            }
+        }
         if show_dialog_humanbot == true {
             if let Some(result) = human_bot.draw() {
                 // Only runs when a button was clicked or dialog was closed
                 match result {
                     MessageBoxResult::ButtonPressed(0) => {
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
                         bot = false;
                     }
                     MessageBoxResult::ButtonPressed(1) => {
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
                         bot = true;
                         ai_diff_int = 0;
                     }
@@ -439,16 +458,13 @@ async fn main() {
                         // IMPORTANT: This catch-all pattern is required by the Rust compiler
                         // even for simple confirm dialogs to ensure all possible values are covered
                     }
-                    MessageBoxResult::Closed => {
-
-                    }
+                    MessageBoxResult::Closed => {}
                 }
             }
         }
         if btn_settings.click() {
             show_dialog_settings = true;
             ai_diff.show();
-            
         }
         if show_dialog_settings == true {
             if let Some(result) = ai_diff.draw() {
@@ -457,27 +473,25 @@ async fn main() {
                     MessageBoxResult::ButtonPressed(0) => {
                         ai_diff_int = 0;
                         bot = true;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
                     }
                     MessageBoxResult::ButtonPressed(1) => {
                         bot = true;
                         ai_diff_int = 1;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
-                        m_Count = 0;
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
+                        m_count = 0;
                     }
                     MessageBoxResult::ButtonPressed(2) => {
                         bot = true;
                         ai_diff_int = 2;
-                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_Count);
+                        reset(&mut btn, &mut player, &mut check, &mut lbl_player, &tm, &mut m_count);
                     }
                     #[allow(unused)]
                     MessageBoxResult::ButtonPressed(_) => {
                         // IMPORTANT: This catch-all pattern is required by the Rust compiler
                         // even for simple confirm dialogs to ensure all possible values are covered
                     }
-                    MessageBoxResult::Closed => {
-
-                    }
+                    MessageBoxResult::Closed => {}
                 }
             }
         }
