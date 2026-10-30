@@ -28,6 +28,7 @@ use crate::ui::text_button::TextButton;
 //use crate::ui::grid::draw_grid;
 use crate::utils::preload_image::TextureManager;
 use macroquad::input::KeyCode::U;
+use macroquad::miniquad::native::apple::frameworks::BOOL;
 use macroquad::prelude::*;
 use miniquad::date;
 
@@ -45,57 +46,65 @@ fn window_conf() -> Conf {
     }
 }
 
-fn findwin(xpos1: &mut usize, xpos2: &mut usize, vector: &mut Vec<ImageButton>, texturem: &TextureManager, ary1: usize, ary2: usize, ary3: usize) {
-    if (*xpos1 == ary1 && *xpos2 == ary2) || (*xpos1 == ary2 && *xpos2 == ary1) {
-                    vector[ary3].set_preload(
-                        texturem.get_preload("assets/o.png").unwrap(),
-                        texturem.get_preload("assets/o.png").unwrap(),
-                    );
-                    vector[ary3].enabled = false;
-                } else if (*xpos1 == ary1 && *xpos2 == ary3) || (*xpos1 == ary3 && *xpos2 == ary1) {
-                    vector[ary2].set_preload(
-                        texturem.get_preload("assets/o.png").unwrap(),
-                        texturem.get_preload("assets/o.png").unwrap(),
-                    );
-                    vector[ary2].enabled = false;
-                } else {
-                    vector[ary1].set_preload(
-                        texturem.get_preload("assets/o.png").unwrap(),
-                        texturem.get_preload("assets/o.png").unwrap(),
-                    );
-                    vector[ary1].enabled = false;
-                }
+fn findwin(pos1: &mut usize, pos2: &mut usize, vector: &mut Vec<ImageButton>, texturem: &TextureManager, ary1: usize, ary2: usize, ary3: usize) {
+    if (*pos1 == ary1 && *pos2 == ary2) || (*pos1 == ary2 && *pos2 == ary1) {
+        vector[ary3].set_preload(
+            texturem.get_preload("assets/o.png").unwrap(),
+            texturem.get_preload("assets/o.png").unwrap(),
+        );
+        vector[ary3].enabled = false;
+    } else if (*pos1 == ary1 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary1) {
+        vector[ary2].set_preload(
+            texturem.get_preload("assets/o.png").unwrap(),
+            texturem.get_preload("assets/o.png").unwrap(),
+        );
+        vector[ary2].enabled = false;
+    } else {
+        vector[ary1].set_preload(
+            texturem.get_preload("assets/o.png").unwrap(),
+            texturem.get_preload("assets/o.png").unwrap(),
+        );
+        vector[ary1].enabled = false;
+    }
 }
 
 fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
     rand::srand(date::now() as u64);
     for i in 0..9 {
-            let mut random_int = rand::gen_range(0, 9);
-            while vector[random_int].get_filename() != "assets/white.png" {
-                random_int = rand::gen_range(0, 9);
-            }
-            if vector[random_int].get_filename() == "assets/white.png" {
-                if player == true {
-                    vector[random_int].set_preload(
-                        texturem.get_preload("assets/o.png").unwrap(),
-                        texturem.get_preload("assets/o.png").unwrap(),
-                    );
-                } else {
-                    vector[random_int].set_preload(
-                        texturem.get_preload("assets/x.png").unwrap(),
-                        texturem.get_preload("assets/x.png").unwrap(),
-                    );
-                }
-                vector[random_int].enabled = false;
-                break;
-            }
+        let mut random_int = rand::gen_range(0, 9);
+        while vector[random_int].get_filename() != "assets/white.png" {
+            random_int = rand::gen_range(0, 9);
         }
+        if vector[random_int].get_filename() == "assets/white.png" {
+            if player == true {
+                vector[random_int].set_preload(
+                    texturem.get_preload("assets/o.png").unwrap(),
+                    texturem.get_preload("assets/o.png").unwrap(),
+                );
+            } else {
+                vector[random_int].set_preload(
+                    texturem.get_preload("assets/x.png").unwrap(),
+                    texturem.get_preload("assets/x.png").unwrap(),
+                );
+            }
+            vector[random_int].enabled = false;
+            break;
+        }
+    }
 }
 
 fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_count: i32, xpos1: &mut usize, xpos2: &mut usize) {
     if ai_diff == 0 {
         randommove(vector, player, texturem);
     } else if ai_diff == 1 {
+        let row1: [usize; 3] = [0, 1, 2];
+        let row2: [usize; 3] = [3, 4, 5];
+        let row3: [usize; 3] = [6, 7, 8];
+        let col1: [usize; 3] = [0, 3, 6];
+        let col2: [usize; 3] = [1, 4, 7];
+        let col3: [usize; 3] = [2, 5, 8];
+        let dia1: [usize; 3] = [0, 4, 8];
+        let dia2: [usize; 3] = [2, 4, 6];
         if m_count == 1 {
             for i in 0..9 {
                 if vector[i].get_filename() == "assets/x.png" {
@@ -105,23 +114,13 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
             }
 
             randommove(vector, player, texturem);
-        }
-
-        else if m_count == 2 {
+        } else if m_count == 2 {
             for i in 0..9 {
                 if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
                     *xpos2 = i;
                     break;
                 }
             }
-            let row1: [usize; 3] = [0, 1, 2];
-            let row2: [usize; 3] = [3, 4, 5];
-            let row3: [usize; 3] = [6, 7, 8];
-            let col1: [usize; 3] = [0, 3, 6];
-            let col2: [usize; 3] = [1, 4, 7];
-            let col3: [usize; 3] = [2, 5, 8];
-            let dia1: [usize; 3] = [0, 4, 8];
-            let dia2: [usize; 3] = [2, 4, 6];
             if row1.contains(xpos1) && row1.contains(xpos2) {
                 findwin(xpos1, xpos2, vector, texturem, 0, 1, 2);
             } else if row2.contains(xpos1) && row2.contains(xpos2) {
@@ -141,9 +140,26 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
             } else {
                 randommove(vector, player, texturem);
             }
-        }
-        else if m_count == 3 {
-            
+        } else if m_count == 3 {
+            if row1.contains(xpos1) && row1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2);
+            } else if row2.contains(xpos1) && row2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5);
+            } else if row3.contains(xpos1) && row3.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8);
+            } else if col1.contains(xpos1) && col1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6);
+            } else if col2.contains(xpos1) && col2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7);
+            } else if col3.contains(xpos1) && col3.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8);
+            } else if dia1.contains(xpos1) && dia1.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8);
+            } else if dia2.contains(xpos1) && dia2.contains(xpos2) {
+                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6);
+            } else {
+                
+            }
         }
     } else {
     }
@@ -322,22 +338,33 @@ async fn main() {
     let mut m_count = 0;
     let xpos1 = &mut 42;
     let xpos2 = &mut 42;
+    let opos1 = &mut 42;
+    let opos2 = &mut 42;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
         clear_background(WHITE);
         if onstart == true {
+            for i in 0..9 {
+                btn[i].enabled = false;
+            }
             human_bot.show();
             if let Some(result) = human_bot.draw() {
                 // Only runs when a button was clicked or dialog was closed
                 match result {
                     MessageBoxResult::ButtonPressed(0) => {
+                        for i in 0..9 {
+                            btn[i].enabled = true;
+                        }
                         onstart = false;
                         bot = false;
                     }
                     MessageBoxResult::ButtonPressed(1) => {
                         bot = true;
                         ai_diff_int = 0;
+                        for i in 0..9 {
+                            btn[i].enabled = true;
+                        }
                         onstart = false;
                     }
                     #[allow(unused)]
