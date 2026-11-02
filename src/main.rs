@@ -25,9 +25,7 @@ use crate::ui::image_button::ImageButton;
 use crate::ui::label::Label;
 use crate::ui::messagebox::{MessageBox, MessageBoxResult};
 use crate::ui::text_button::TextButton;
-//use crate::ui::grid::draw_grid;
 use crate::utils::preload_image::TextureManager;
-use macroquad::input::KeyCode::U;
 use macroquad::prelude::*;
 use miniquad::date;
 
@@ -46,24 +44,26 @@ fn window_conf() -> Conf {
 }
 
 fn findwin(pos1: &mut usize, pos2: &mut usize, vector: &mut Vec<ImageButton>, texturem: &TextureManager, ary1: usize, ary2: usize, ary3: usize) {
-    if (*pos1 == ary1 && *pos2 == ary2) || (*pos1 == ary2 && *pos2 == ary1) {
+    if ((*pos1 == ary1 && *pos2 == ary2) || (*pos1 == ary2 && *pos2 == ary1)) && vector[ary3].get_filename() == "assets/white.png" {
         vector[ary3].set_preload(
             texturem.get_preload("assets/o.png").unwrap(),
             texturem.get_preload("assets/o.png").unwrap(),
         );
         vector[ary3].enabled = false;
-    } else if (*pos1 == ary1 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary1) {
+    } else if ((*pos1 == ary1 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary1)) && vector[ary2].get_filename() == "assets/white.png" {
         vector[ary2].set_preload(
             texturem.get_preload("assets/o.png").unwrap(),
             texturem.get_preload("assets/o.png").unwrap(),
         );
         vector[ary2].enabled = false;
-    } else {
+    } else if ((*pos1 == ary2 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary2)) && vector[ary1].get_filename() == "assets/white.png" {
         vector[ary1].set_preload(
             texturem.get_preload("assets/o.png").unwrap(),
             texturem.get_preload("assets/o.png").unwrap(),
         );
         vector[ary1].enabled = false;
+    } else {
+        randommove(vector, true, texturem);
     }
 }
 
@@ -92,10 +92,18 @@ fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureMan
     }
 }
 
-fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager, m_count: i32, xpos1: &mut usize, xpos2: &mut usize) {
-    if ai_diff == 0 {
-        randommove(vector, player, texturem);
-    } else if ai_diff == 1 {
+fn ai_move(
+    ai_diff: i32,
+    vector: &mut Vec<ImageButton>,
+    player: bool,
+    texturem: &TextureManager,
+    m_count: i32,
+    xpos1: &mut usize,
+    xpos2: &mut usize,
+    opos1: &mut usize,
+    opos2: &mut usize,
+) {
+
         let row1: [usize; 3] = [0, 1, 2];
         let row2: [usize; 3] = [3, 4, 5];
         let row3: [usize; 3] = [6, 7, 8];
@@ -104,6 +112,9 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
         let col3: [usize; 3] = [2, 5, 8];
         let dia1: [usize; 3] = [0, 4, 8];
         let dia2: [usize; 3] = [2, 4, 6];
+    if ai_diff == 0 {
+        randommove(vector, player, texturem);
+    } else if ai_diff == 1 {
         if m_count == 1 {
             for i in 0..9 {
                 if vector[i].get_filename() == "assets/x.png" {
@@ -117,50 +128,88 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
             for i in 0..9 {
                 if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
                     *xpos2 = i;
-                    break;
+                }
+                if vector[i].get_filename() == "assets/o.png" {
+                    *opos1 = i;
                 }
             }
             if row1.contains(xpos1) && row1.contains(xpos2) {
                 findwin(xpos1, xpos2, vector, texturem, 0, 1, 2);
-            } else if row2.contains(xpos1) && row2.contains(xpos2) {
+            } else if row2.contains(xpos1) && row2.contains(xpos2) && !row2.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 3, 4, 5);
-            } else if row3.contains(xpos1) && row3.contains(xpos2) {
+            } else if row3.contains(xpos1) && row3.contains(xpos2) && !row3.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 6, 7, 8);
-            } else if col1.contains(xpos1) && col1.contains(xpos2) {
+            } else if col1.contains(xpos1) && col1.contains(xpos2) && !col1.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 0, 3, 6);
-            } else if col2.contains(xpos1) && col2.contains(xpos2) {
+            } else if col2.contains(xpos1) && col2.contains(xpos2) && !col2.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 1, 4, 7);
-            } else if col3.contains(xpos1) && col3.contains(xpos2) {
+            } else if col3.contains(xpos1) && col3.contains(xpos2) && !col3.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 2, 5, 8);
-            } else if dia1.contains(xpos1) && dia1.contains(xpos2) {
+            } else if dia1.contains(xpos1) && dia1.contains(xpos2) && !dia1.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 0, 4, 8);
-            } else if dia2.contains(xpos1) && dia2.contains(xpos2) {
+            } else if dia2.contains(xpos1) && dia2.contains(xpos2) && !dia1.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 2, 4, 6);
             } else {
                 randommove(vector, player, texturem);
             }
         } else if m_count == 3 {
-            if row1.contains(xpos1) && row1.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2);
-            } else if row2.contains(xpos1) && row2.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5);
-            } else if row3.contains(xpos1) && row3.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8);
-            } else if col1.contains(xpos1) && col1.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6);
-            } else if col2.contains(xpos1) && col2.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7);
-            } else if col3.contains(xpos1) && col3.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8);
-            } else if dia1.contains(xpos1) && dia1.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8);
-            } else if dia2.contains(xpos1) && dia2.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6);
-            } else {
-                
+            for i in 0..9 {
+                if vector[i].get_filename() == "assets/o.png" && i != *opos1 {
+                    *opos2 = i;
+                }
             }
+            if row1.contains(opos1) && row1.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 0, 1, 2);
+            } else if row2.contains(opos1) && row2.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 3, 4, 5);
+            } else if row3.contains(opos1) && row3.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 6, 7, 8);
+            } else if col1.contains(opos1) && col1.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 0, 3, 6);
+            } else if col2.contains(opos1) && col2.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 1, 4, 7);
+            } else if col3.contains(opos1) && col3.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 2, 5, 8);
+            } else if dia1.contains(opos1) && dia1.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 0, 4, 8);
+            } else if dia2.contains(opos1) && dia2.contains(opos2) {
+                findwin(opos1, opos2, vector, texturem, 2, 4, 6);
+            } else {
+                randommove(vector, player, texturem);
+            }
+        } else if m_count >= 4 {
+            randommove(vector, player, texturem);
         }
     } else {
+        if m_count == 1 {
+            for i in 0..9 {
+                if vector[i].get_filename() == "assets/x.png" {
+                    *xpos1 = i;
+                    break;
+                }
+            }
+            if dia1.contains(xpos1) && dia2.contains(xpos1) {
+                vector[4].set_preload(
+                    texturem.get_preload("assets/o.png").unwrap(),
+                    texturem.get_preload("assets/o.png").unwrap(),
+                );
+                vector[4].enabled = false;
+            }
+            else {
+                let mut random_int = rand::gen_range(0, 9);
+                while random_int != 4 {
+                    random_int = rand::gen_range(0, 9);
+                }
+                vector[random_int].set_preload(
+                    texturem.get_preload("assets/o.png").unwrap(),
+                    texturem.get_preload("assets/o.png").unwrap(),
+                );
+                vector[random_int].enabled = false;
+            }
+        }
+        else if m_count == 2 {
+
+        }
     }
 }
 
@@ -397,7 +446,7 @@ async fn main() {
                             xscore += 1;
                             check = false;
                         } else if checkwinner(&btn) == 0 {
-                            ai_move(ai_diff_int, &mut btn, true, &tm, m_count, xpos1, xpos2);
+                            ai_move(ai_diff_int, &mut btn, true, &tm, m_count, xpos1, xpos2, opos1, opos2);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
@@ -415,7 +464,7 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     } else {
                         btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
-                        ai_move(ai_diff_int, &mut btn, false, &tm, m_count, xpos1, xpos2);
+                        ai_move(ai_diff_int, &mut btn, false, &tm, m_count, xpos1, xpos2, opos1, opos2);
                         lbl_player.set_text("Player: X");
                     }
                 } else {
