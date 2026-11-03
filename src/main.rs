@@ -273,17 +273,17 @@ fn ai_move(
             } else if row2.contains(xpos1) && row2.contains(xpos2) && !row2.contains(opos1) {
                 findwin(xpos1, xpos2, vector, texturem, 3, 4, 5, xpos3);
             } else if row3.contains(xpos1) && row3.contains(xpos2) && !row3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8);
+                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8, xpos3);
             } else if col1.contains(xpos1) && col1.contains(xpos2) && !col1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6);
+                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6, xpos3);
             } else if col2.contains(xpos1) && col2.contains(xpos2) && !col2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7);
+                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7, xpos3);
             } else if col3.contains(xpos1) && col3.contains(xpos2) && !col3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8);
+                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8, xpos3);
             } else if dia1.contains(xpos1) && dia1.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8);
+                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8, xpos3);
             } else if dia2.contains(xpos1) && dia2.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6);
+                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6, xpos3);
             } else {
                 randommove(vector, player, texturem);
             }
