@@ -105,7 +105,6 @@ fn line_spot(vector: &Vec<ImageButton>, a: usize, b: usize, c: usize, mark: &str
 
 fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
     rand::srand(date::now() as u64);
-    for i in 0..9 {
         let mut random_int = rand::gen_range(0, 9);
         while vector[random_int].get_filename() != "assets/white.png" {
             random_int = rand::gen_range(0, 9);
@@ -123,8 +122,7 @@ fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureMan
                 );
             }
             vector[random_int].enabled = false;
-            break;
-        }
+        
     }
 }
 
@@ -358,12 +356,6 @@ async fn main() {
     let mut show_dialog_settings = false;
     let mut show_dialog_humanbot = false;
     let mut m_count = 0;
-    let xpos1 = &mut 42;
-    let xpos2 = &mut 42;
-    let xpos3 = &mut 42;
-    let opos1 = &mut 42;
-    let opos2 = &mut 42;
-    let opos3 = &mut 42;
     btn_reset.with_hover_text_color(BLACK);
     btn_exit.with_hover_text_color(BLACK);
     loop {
