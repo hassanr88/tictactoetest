@@ -43,28 +43,64 @@ fn window_conf() -> Conf {
     }
 }
 
-fn findwin(pos1: &mut usize, pos2: &mut usize, vector: &mut Vec<ImageButton>, texturem: &TextureManager, ary1: usize, ary2: usize, ary3: usize, pos3: &mut usize) {
-    if ((*pos1 == ary1 && *pos2 == ary2) || (*pos1 == ary2 && *pos2 == ary1)) && vector[ary3].get_filename() == "assets/white.png" {
-        vector[ary3].set_preload(
-            texturem.get_preload("assets/o.png").unwrap(),
-            texturem.get_preload("assets/o.png").unwrap(),
-        );
-        vector[ary3].enabled = false;
-    } else if ((*pos1 == ary1 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary1)) && vector[ary2].get_filename() == "assets/white.png" {
-        vector[ary2].set_preload(
-            texturem.get_preload("assets/o.png").unwrap(),
-            texturem.get_preload("assets/o.png").unwrap(),
-        );
-        vector[ary2].enabled = false;
-    } else if ((*pos1 == ary2 && *pos2 == ary3) || (*pos1 == ary3 && *pos2 == ary2)) && vector[ary1].get_filename() == "assets/white.png" {
-        vector[ary1].set_preload(
-            texturem.get_preload("assets/o.png").unwrap(),
-            texturem.get_preload("assets/o.png").unwrap(),
-        );
-        vector[ary1].enabled = false;
-    } else {
-        randommove(vector, true, texturem);
+fn place(vector: &mut Vec<ImageButton>, spot: usize, png: &str, texturem: &TextureManager) {
+    vector[spot].set_preload(
+        texturem.get_preload(png).unwrap(),
+        texturem.get_preload(png).unwrap(),
+    );
+    vector[spot].enabled = false;
+}
+
+
+fn first_empty(vector: &Vec<ImageButton>, spots: [usize; 4]) -> usize {
+    for i in 0..4 {
+        if vector[spots[i]].get_filename() == "assets/white.png" {
+            return spots[i];
+        }
     }
+    42
+}
+
+fn fork_count(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], i: usize) -> i32 {
+    let mut n = 0;
+    for l in 0..8 {
+        if lines[l].contains(&i) {
+            let mut x = 0;
+            let mut empty = 0;
+            for k in 0..3 {
+                if vector[lines[l][k]].get_filename() == "assets/x.png" {
+                    x += 1;
+                } else if vector[lines[l][k]].get_filename() == "assets/white.png" {
+                    empty += 1;
+                }
+            }
+            if x == 1 && empty == 2 {
+                n += 1;
+            }
+        }
+    }
+    n
+}
+
+fn find_spot(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], mark: &str) -> usize {
+    for l in 0..8 {
+        let spot = line_spot(vector, lines[l][0], lines[l][1], lines[l][2], mark);
+        if spot != 42 {
+            return spot;
+        }
+    }
+    42
+}
+
+fn line_spot(vector: &Vec<ImageButton>, a: usize, b: usize, c: usize, mark: &str) -> usize {
+    if vector[a].get_filename() == mark && vector[b].get_filename() == mark && vector[c].get_filename() == "assets/white.png" {
+        return c;
+    } else if vector[a].get_filename() == mark && vector[c].get_filename() == mark && vector[b].get_filename() == "assets/white.png" {
+        return b;
+    } else if vector[b].get_filename() == mark && vector[c].get_filename() == mark && vector[a].get_filename() == "assets/white.png" {
+        return a;
+    }
+    42
 }
 
 fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
@@ -92,203 +128,63 @@ fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureMan
     }
 }
 
-fn ai_move(
-    ai_diff: i32,
-    vector: &mut Vec<ImageButton>,
-    player: bool,
-    texturem: &TextureManager,
-    m_count: i32,
-    xpos1: &mut usize,
-    xpos2: &mut usize,
-    xpos3: &mut usize,
-    opos1: &mut usize,
-    opos2: &mut usize,
-    opos3: &mut usize,
-) {
+fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
+    let lines: [[usize; 3]; 8] = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6],
+    ];
 
-        let row1: [usize; 3] = [0, 1, 2];
-        let row2: [usize; 3] = [3, 4, 5];
-        let row3: [usize; 3] = [6, 7, 8];
-        let col1: [usize; 3] = [0, 3, 6];
-        let col2: [usize; 3] = [1, 4, 7];
-        let col3: [usize; 3] = [2, 5, 8];
-        let dia1: [usize; 3] = [0, 4, 8];
-        let dia2: [usize; 3] = [2, 4, 6];
     if ai_diff == 0 {
         randommove(vector, player, texturem);
-    } else if ai_diff == 1 {
-        if m_count == 1 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/x.png" {
-                    *xpos1 = i;
-                    break;
-                }
-            }
+        return;
+    }
+ 
+    let mut spot = find_spot(vector, &lines, "assets/o.png");
+    if spot == 42 {
+        spot = find_spot(vector, &lines, "assets/x.png");
+    }
 
+    if ai_diff == 1 {
+        if spot == 42 {
             randommove(vector, player, texturem);
-        } else if m_count == 2 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
-                    *xpos2 = i;
-                }
-                if vector[i].get_filename() == "assets/o.png" {
-                    *opos1 = i;
-                }
-            }
-            if row1.contains(xpos1) && row1.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2, xpos3);
-            } else if row2.contains(xpos1) && row2.contains(xpos2) && !row2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5, xpos3);
-            } else if row3.contains(xpos1) && row3.contains(xpos2) && !row3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8, xpos3);
-            } else if col1.contains(xpos1) && col1.contains(xpos2) && !col1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6, xpos3);
-            } else if col2.contains(xpos1) && col2.contains(xpos2) && !col2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7, xpos3);
-            } else if col3.contains(xpos1) && col3.contains(xpos2) && !col3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8, xpos3);
-            } else if dia1.contains(xpos1) && dia1.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8, xpos3);
-            } else if dia2.contains(xpos1) && dia2.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6, xpos3);
-            } else {
-                randommove(vector, player, texturem);
-            }
-        } else if m_count == 3 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/o.png" && i != *opos1 {
-                    *opos2 = i;
-                }
-            }
-            if row1.contains(opos1) && row1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 1, 2, xpos3);
-            } else if row2.contains(opos1) && row2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 3, 4, 5, xpos3);
-            } else if row3.contains(opos1) && row3.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 6, 7, 8, xpos3);
-            } else if col1.contains(opos1) && col1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 3, 6, xpos3);
-            } else if col2.contains(opos1) && col2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 1, 4, 7, xpos3);
-            } else if col3.contains(opos1) && col3.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 2, 5, 8, xpos3);
-            } else if dia1.contains(opos1) && dia1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 4, 8, xpos3);
-            } else if dia2.contains(opos1) && dia2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 2, 4, 6, xpos3);
-            } else {
-                randommove(vector, player, texturem);
-            }
-        } else if m_count >= 4 {
-            randommove(vector, player, texturem);
+        } else {
+            place(vector, spot, "assets/o.png", texturem);
         }
-    } else {
-        if m_count == 1 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/x.png" {
-                    *xpos1 = i;
-                    break;
-                }
-            }
-            if dia1.contains(xpos1) && dia2.contains(xpos1) {
-                let mut random_int = rand::gen_range(0, 9);
-                while random_int == 4 {
-                    random_int = rand::gen_range(0, 9);
-                }
-                vector[random_int].set_preload(
-                    texturem.get_preload("assets/o.png").unwrap(),
-                    texturem.get_preload("assets/o.png").unwrap(),
-                );
-                vector[random_int].enabled = false;
-            }
-            else {
-                vector[4].set_preload(
-                    texturem.get_preload("assets/o.png").unwrap(),
-                    texturem.get_preload("assets/o.png").unwrap(),
-                );
-                vector[4].enabled = false;
-            }
-        }
-        else if m_count == 2 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/x.png" && i != *xpos1 {
-                    *xpos2 = i;
-                }
-                if vector[i].get_filename() == "assets/o.png" {
-                    *opos1 = i;
-                }
-            }
-            if row1.contains(xpos1) && row1.contains(xpos2) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2, xpos3);
-            } else if row2.contains(xpos1) && row2.contains(xpos2) && !row2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5, xpos3);
-            } else if row3.contains(xpos1) && row3.contains(xpos2) && !row3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8, xpos3);
-            } else if col1.contains(xpos1) && col1.contains(xpos2) && !col1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6, xpos3);
-            } else if col2.contains(xpos1) && col2.contains(xpos2) && !col2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7, xpos3);
-            } else if col3.contains(xpos1) && col3.contains(xpos2) && !col3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8, xpos3);
-            } else if dia1.contains(xpos1) && dia1.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8, xpos3);
-            } else if dia2.contains(xpos1) && dia2.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6, xpos3);
-            } else {
-                randommove(vector, player, texturem);
-            }
-        }
-        else if m_count == 3 {
-            for i in 0..9 {
-                if vector[i].get_filename() == "assets/o.png" && i != *opos1 {
-                    *opos2 = i;
-                }
-                if vector[i].get_filename() == "assets/x.png" && (i != *xpos1) || (i != *xpos2) {
-                    *xpos3 = i;
-                }
-            }
-            if row1.contains(opos1) && row1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 1, 2, xpos3);
-            } else if row2.contains(opos1) && row2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 3, 4, 5, xpos3);
-            } else if row3.contains(opos1) && row3.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 6, 7, 8, xpos3);
-            } else if col1.contains(opos1) && col1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 3, 6, xpos3);
-            } else if col2.contains(opos1) && col2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 1, 4, 7, xpos3);
-            } else if col3.contains(opos1) && col3.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 2, 5, 8, xpos3);
-            } else if dia1.contains(opos1) && dia1.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 0, 4, 8, xpos3);
-            } else if dia2.contains(opos1) && dia2.contains(opos2) {
-                findwin(opos1, opos2, vector, texturem, 2, 4, 6, xpos3);
-            } else {
-                randommove(vector, player, texturem);
-            }
-        }
-        else if m_count == 4 {
-            if row1.contains(xpos1) && row1.contains(xpos3) || row1.contains(xpos2) && row1.contains(xpos3) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 1, 2, xpos3);
-            } else if row2.contains(xpos1) && row2.contains(xpos2) && !row2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 3, 4, 5, xpos3);
-            } else if row3.contains(xpos1) && row3.contains(xpos2) && !row3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 6, 7, 8, xpos3);
-            } else if col1.contains(xpos1) && col1.contains(xpos2) && !col1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 3, 6, xpos3);
-            } else if col2.contains(xpos1) && col2.contains(xpos2) && !col2.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 1, 4, 7, xpos3);
-            } else if col3.contains(xpos1) && col3.contains(xpos2) && !col3.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 5, 8, xpos3);
-            } else if dia1.contains(xpos1) && dia1.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 0, 4, 8, xpos3);
-            } else if dia2.contains(xpos1) && dia2.contains(xpos2) && !dia1.contains(opos1) {
-                findwin(xpos1, xpos2, vector, texturem, 2, 4, 6, xpos3);
-            } else {
-                randommove(vector, player, texturem);
+        return;
+    }
+
+    let mut forks = 0;
+    let mut first_fork = 42;
+    for i in 0..9 {
+        if spot == 42 && vector[i].get_filename() == "assets/white.png" && fork_count(vector, &lines, i) >= 2 {
+            forks += 1;
+            if first_fork == 42 {
+                first_fork = i;
             }
         }
     }
+    if forks == 1 {
+        spot = first_fork;
+    } else if forks > 1 {
+        if vector[4].get_filename() == "assets/o.png" {
+            spot = first_empty(vector, [1, 3, 5, 7]);
+        } else {
+            spot = first_empty(vector, [0, 2, 6, 8]);
+        }
+    }
+
+    if spot == 42 && vector[4].get_filename() == "assets/white.png" {
+        spot = 4;
+    }
+    if spot == 42 {
+        spot = first_empty(vector, [0, 2, 6, 8]);
+    }
+    if spot == 42 {
+        spot = first_empty(vector, [1, 3, 5, 7]);
+    }
+
+    place(vector, spot, "assets/o.png", texturem);
 }
 
 fn checkwinner(btn: &Vec<ImageButton>) -> i32 {
@@ -526,7 +422,7 @@ async fn main() {
                             xscore += 1;
                             check = false;
                         } else if checkwinner(&btn) == 0 {
-                            ai_move(ai_diff_int, &mut btn, true, &tm, m_count, xpos1, xpos2, xpos3, opos1, opos2, opos3);
+                            ai_move(ai_diff_int, &mut btn, true, &tm);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
@@ -544,7 +440,7 @@ async fn main() {
                         lbl_player.set_text("Player: X");
                     } else {
                         btn[i].set_preload(tm.get_preload("assets/o.png").unwrap(), tm.get_preload("assets/o.png").unwrap());
-                        ai_move(ai_diff_int, &mut btn, false, &tm, m_count, xpos1, xpos2, xpos3, opos1, opos2, opos3);
+                        ai_move(ai_diff_int, &mut btn, false, &tm);
                         lbl_player.set_text("Player: X");
                     }
                 } else {
