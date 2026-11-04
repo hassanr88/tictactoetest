@@ -83,16 +83,19 @@ fn fork_count(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], i: usize) -> i
 }
 
 fn find_spot(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], mark: &str) -> usize {
+    //this for loop checks each winning combination on whether or not it'll win, if not it returns 42 aka nothing. 
     for l in 0..8 {
         let spot = line_spot(vector, lines[l][0], lines[l][1], lines[l][2], mark);
         if spot != 42 {
             return spot;
+            // this returns the spot that is going to win.
         }
     }
     42
 }
 
 fn line_spot(vector: &Vec<ImageButton>, a: usize, b: usize, c: usize, mark: &str) -> usize {
+    //this checks each spot in each winning combination to see which of the 3 squares in that combo is white while the others are the mark (x or o).
     if vector[a].get_filename() == mark && vector[b].get_filename() == mark && vector[c].get_filename() == "assets/white.png" {
         return c;
     } else if vector[a].get_filename() == mark && vector[c].get_filename() == mark && vector[b].get_filename() == "assets/white.png" {
@@ -109,21 +112,12 @@ fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureMan
         while vector[random_int].get_filename() != "assets/white.png" {
             random_int = rand::gen_range(0, 9);
         }
-        if vector[random_int].get_filename() == "assets/white.png" {
             if player == true {
-                vector[random_int].set_preload(
-                    texturem.get_preload("assets/o.png").unwrap(),
-                    texturem.get_preload("assets/o.png").unwrap(),
-                );
+                place(vector, random_int, "assets/o.png", texturem);
             } else {
-                vector[random_int].set_preload(
-                    texturem.get_preload("assets/x.png").unwrap(),
-                    texturem.get_preload("assets/x.png").unwrap(),
-                );
+                place(vector, random_int, "assets/x.png", texturem);
             }
             vector[random_int].enabled = false;
-        
-    }
 }
 
 fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
@@ -137,11 +131,14 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
         randommove(vector, player, texturem);
         return;
     }
- 
+    // this checks for winning moves for the ai and then checks whether or not the player has a winning move that the ai can block. 
     let mut spot = find_spot(vector, &lines, "assets/o.png");
     if spot == 42 {
         spot = find_spot(vector, &lines, "assets/x.png");
     }
+    /* ^^^ that is not in either normal or impossible b/c we need to use it in both so jus keep it outside of both of them to use. 
+    Keep it below the easy mode so it doesn't trigger on that.
+     */ 
 
     if ai_diff == 1 {
         if spot == 42 {
