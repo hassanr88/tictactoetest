@@ -26,6 +26,7 @@ use crate::ui::label::Label;
 use crate::ui::messagebox::{MessageBox, MessageBoxResult};
 use crate::ui::text_button::TextButton;
 use crate::utils::preload_image::TextureManager;
+use crate::ui::still_image::StillImage;
 use macroquad::prelude::*;
 use miniquad::date;
 
@@ -254,7 +255,7 @@ fn reset(btn: &mut Vec<ImageButton>, player: &mut bool, check: &mut bool, lbl_pl
 #[macroquad::main(window_conf)]
 async fn main() {
     let tm = TextureManager::new();
-    tm.preload_all(&["assets/o.png", "assets/x.png", "assets/white.png"]).await;
+    tm.preload_all(&["assets/o.png", "assets/x.png", "assets/white.png", "assets/background.png"]).await;
     let mut btn: Vec<ImageButton> = vec![
         ImageButton::from_preload(
             250.0,                                       // x position
@@ -329,7 +330,15 @@ async fn main() {
             tm.get_preload("assets/white.png").unwrap(), // hover state image
         ),
     ];
-
+    let img_background = StillImage::from_preload(
+        tm.get_preload("assets/background.png").unwrap(),
+        1050.0,
+        768.0,
+        0.0,
+        0.0,
+        true,
+        1.0,
+    );
     let mut human_bot = MessageBox::custom("Bot or Player ?", "Select Human or Bot", vec!["Huaman", "Bot"], Some(0));
     let mut ai_diff = MessageBox::custom(
         "Choose Difficulty",
@@ -339,8 +348,8 @@ async fn main() {
     );
     let mut btn_reset = TextButton::new(250.0, 700.0, 150.0, 50.0, "Reset", GRAY, RED, 30);
     let mut btn_exit = TextButton::new(650.0, 700.0, 150.0, 50.0, "Exit", GRAY, RED, 30);
-    let btn_modeswitch = TextButton::new(50.0, 600.0, 150.0, 50.0, "Change Mode", GRAY, PURPLE, 30);
-    let mut btn_settings = TextButton::new(50.0, 700.0, 150.0, 50.0, "Settings", GRAY, PURPLE, 30);
+    let mut btn_modeswitch = TextButton::new(40.0, 600.0, 170.0, 50.0, "Change Mode", GRAY, PURPLE, 30);
+    let mut btn_settings = TextButton::new(40.0, 700.0, 170.0, 50.0, "Settings", GRAY, BLUE, 30);
     let mut player = true;
     let mut lbl_score = Label::new("Score: X: 0 O: 0 Tie: 0", 380.0, 650.0, 30);
     let mut lbl_player = Label::new("Player: X", 464.0, 750.0, 30);
@@ -354,10 +363,15 @@ async fn main() {
     let mut show_dialog_settings = false;
     let mut show_dialog_humanbot = false;
     let mut m_count = 0;
-    btn_reset.with_hover_text_color(BLACK);
-    btn_exit.with_hover_text_color(BLACK);
+    btn_reset.with_hover_text_color(BLACK).with_border(RED, 10.0);
+    btn_exit.with_hover_text_color(BLACK).with_border(RED, 10.0);
+    btn_settings.with_border(BLUE, 10.0);
+    btn_modeswitch.with_border(PURPLE, 10.0);
+    lbl_player.with_colors(WHITE, Some(DARKGRAY));
+    lbl_score.with_colors(WHITE, Some(DARKGRAY));
     loop {
         clear_background(WHITE);
+        img_background.draw();
         if onstart == true {
             for i in 0..9 {
                 btn[i].enabled = false;
@@ -407,25 +421,30 @@ async fn main() {
                         btn[i].enabled = false;
                         if checkwinner(&btn) == 3 {
                             ties += 1;
+                            lbl_player.set_text("TIE!");
                             check = false;
                         } else if checkwinner(&btn) == 1 {
                             xscore += 1;
+                            lbl_player.set_text("X WON!");
                             check = false;
                         } else if checkwinner(&btn) == 0 {
                             ai_move(ai_diff_int, &mut btn, true, &tm);
 
                             if checkwinner(&btn) == 2 {
                                 oscore += 1;
+                                lbl_player.set_text("O WON!");
                                 check = false;
                             }
                         } else if checkwinner(&btn) == 2 {
                             oscore += 1;
+                            lbl_player.set_text("O WON!");
                             check = false;
                         }
                         if check == false {
                             for i in 0..btn.len() {
                                 btn[i].enabled = false;
                             }
+                            break;
                         }
                         lbl_player.set_text("Player: X");
                     } else {

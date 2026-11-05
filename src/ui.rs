@@ -16,3 +16,4 @@ pub mod image_button;
 pub mod label;
 pub mod messagebox;
 pub mod text_button;
+pub mod still_image;
