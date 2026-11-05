@@ -566,3 +566,4 @@ async fn main() {
         next_frame().await;
     }
 }
+// make sure the tic tac toe and buttons are disabled at the beginning and add a restart button to restart all the wins.
