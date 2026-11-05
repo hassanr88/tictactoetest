@@ -84,8 +84,8 @@ fn fork_count(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], i: usize) -> i
 
 fn find_spot(vector: &Vec<ImageButton>, lines: &[[usize; 3]; 8], mark: &str) -> usize {
     //this for loop checks each winning combination on whether or not it'll win, if not it returns 42 aka nothing. 
-    for l in 0..8 {
-        let spot = line_spot(vector, lines[l][0], lines[l][1], lines[l][2], mark);
+    for i in 0..8 {
+        let spot = line_spot(vector, lines[i][0], lines[i][1], lines[i][2], mark);
         if spot != 42 {
             return spot;
             // this returns the spot that is going to win.
@@ -109,6 +109,7 @@ fn line_spot(vector: &Vec<ImageButton>, a: usize, b: usize, c: usize, mark: &str
 fn randommove(vector: &mut Vec<ImageButton>, player: bool, texturem: &TextureManager) {
     rand::srand(date::now() as u64);
         let mut random_int = rand::gen_range(0, 9);
+        // this while loop checks to see if the random spot is white, if not it keeps generating a new random number until it finds a white spot.
         while vector[random_int].get_filename() != "assets/white.png" {
             random_int = rand::gen_range(0, 9);
         }
@@ -131,7 +132,7 @@ fn ai_move(ai_diff: i32, vector: &mut Vec<ImageButton>, player: bool, texturem: 
         randommove(vector, player, texturem);
         return;
     }
-    // this checks for winning moves for the ai and then checks whether or not the player has a winning move that the ai can block. 
+    // this checks for winning moves for the ai FIRST, and then checks whether or not the player has a winning move that the ai can block. 
     let mut spot = find_spot(vector, &lines, "assets/o.png");
     if spot == 42 {
         spot = find_spot(vector, &lines, "assets/x.png");
