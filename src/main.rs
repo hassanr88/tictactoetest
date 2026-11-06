@@ -376,6 +376,9 @@ async fn main() {
             for i in 0..9 {
                 btn[i].enabled = false;
             }
+            btn_modeswitch.enabled = false;
+            btn_reset.enabled = false;
+            btn_settings.enabled = false;
             human_bot.show();
             if let Some(result) = human_bot.draw() {
                 // Only runs when a button was clicked or dialog was closed
@@ -403,6 +406,10 @@ async fn main() {
                     MessageBoxResult::Closed => {}
                 }
             }
+        }
+        else {
+            btn_modeswitch.enabled = true;
+            btn_reset.enabled = true;
         }
         if bot == false {
             btn_settings.enabled = false;
